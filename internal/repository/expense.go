@@ -4,6 +4,7 @@ import (
 	"context"
 	"expense_tracker/internal/model"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -77,7 +78,7 @@ func (r *ExpenseRepository) UpdateExpense(ctx context.Context, id int, userID in
 }
 
 func (r *ExpenseRepository) DeleteExpense(ctx context.Context, id int, userID int) error {
-	q := `DELETE FROM expanses WHERE id = $1 AND user_id = $2`
+	q := `DELETE FROM expenses WHERE id = $1 AND user_id = $2`
 	result, err := r.db.Pool.Exec(ctx, q, id, userID)
 	if err != nil {
 		return fmt.Errorf("repository/expense: can`t delete expanse: %w", err)
@@ -87,4 +88,55 @@ func (r *ExpenseRepository) DeleteExpense(ctx context.Context, id int, userID in
 		return fmt.Errorf("repository/expense: expanse not found (id: %d, user_id: %d)", id, userID)
 	}
 	return nil
+}
+
+func (r *ExpenseRepository) GetExpensesByPeriod(ctx context.Context, userID int, start, end time.Time) ([]model.Expense, error) {
+	q := `SELECT id, user_id, amount, category, description, date FROM expenses
+	WHERE user_id = $1 and date BETWEEN $2 AND $3 ORDER BY date`
+
+	rows, err := r.db.Pool.Query(ctx, q, userID, start, end)
+	if err != nil {
+		return nil, fmt.Errorf("repository/expense: can't get expenses by period: %w", err)
+	}
+	defer rows.Close()
+
+	return scanExpenses(rows)
+}
+
+func (r *ExpenseRepository) GetExpensesByCategory(ctx context.Context, userID int, category string) ([]model.Expense, error) {
+	q := `SELECT id, user_id, amount, category, description, date FROM expenses
+	WHERE user_id = $1 and category = $2 ORDER BY date`
+
+	rows, err := r.db.Pool.Query(ctx, q, userID, category)
+	if err != nil {
+		return nil, fmt.Errorf("repository/expense: can't get expenses by category: %w", err)
+	}
+	defer rows.Close()
+
+	return scanExpenses(rows)
+}
+
+func scanExpenses(rows pgx.Rows) ([]model.Expense, error) {
+	var expenses []model.Expense
+
+	for rows.Next() {
+		var e model.Expense
+		err := rows.Scan(
+			&e.ID,
+			&e.UserID,
+			&e.Amount,
+			&e.Category,
+			&e.Description,
+			&e.Date,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository/expense: can't scan expense row: %w", err)
+		}
+		expenses = append(expenses, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository/expense: rows ineratin error: %w", err)
+	}
+
+	return expenses, nil
 }

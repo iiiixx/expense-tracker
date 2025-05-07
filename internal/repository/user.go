@@ -34,7 +34,18 @@ func (r *UserRepository) GetUserByName(ctx context.Context, username string) (*m
 	err := r.db.Pool.QueryRow(ctx, q, username).Scan(&user.ID, &user.Username, &user.Password)
 
 	if err != nil {
-		return nil, fmt.Errorf("repository/user: can't get user: %w", err)
+		return nil, fmt.Errorf("repository/user: can't get user by name: %w", err)
+	}
+	return user, err
+}
+
+func (r *UserRepository) GetUserById(ctx context.Context, id int) (*model.User, error) {
+	q := `SELECT id, username, password FROM users WHERE user_id= $1`
+	user := &model.User{}
+	err := r.db.Pool.QueryRow(ctx, q, id).Scan(&user.ID, &user.Username, &user.Password)
+
+	if err != nil {
+		return nil, fmt.Errorf("repository/user: can't get user by id: %w", err)
 	}
 	return user, err
 }
