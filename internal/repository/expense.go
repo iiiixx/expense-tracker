@@ -26,7 +26,7 @@ func (r *ExpenseRepository) CreateExpense(ctx context.Context, expense model.Exp
 	err := r.db.Pool.QueryRow(ctx, q, expense.UserID, expense.Amount, expense.Category, expense.Description, expense.Date).Scan(&id)
 
 	if err != nil {
-		return 0, fmt.Errorf("repository: can't create expense: %w", err)
+		return 0, fmt.Errorf("repository/expense: can't create expense: %w", err)
 	}
 
 	return id, nil
@@ -38,10 +38,10 @@ func (r *ExpenseRepository) GetExpenseByID(ctx context.Context, id int, userID i
 	err := r.db.Pool.QueryRow(ctx, q, id, userID).Scan(&expense.ID, &expense.UserID, &expense.Amount, &expense.Category, &expense.Description, &expense.Date)
 
 	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("repository: no such expense: %w", err)
+		return nil, fmt.Errorf("repository/expense: no such expense: %w", err)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("repository: can't found expense: %w", err)
+		return nil, fmt.Errorf("repository/expense: can't found expense: %w", err)
 	}
 	return expense, nil
 }
@@ -52,7 +52,7 @@ func (r *ExpenseRepository) IsExists(ctx context.Context, id int, userID int) (b
 	err := r.db.Pool.QueryRow(ctx, q, id, userID).Scan(&count)
 
 	if err != nil {
-		return false, fmt.Errorf("can't check existanse of the expense: %w", err)
+		return false, fmt.Errorf("repository/expense: can't check existanse of the expense: %w", err)
 	}
 	return count > 0, nil
 }
@@ -67,10 +67,10 @@ func (r *ExpenseRepository) UpdateExpense(ctx context.Context, id int, userID in
 		input.Description, input.Date, id, userID).Scan(&updated.ID, &updated.UserID,
 		&updated.Amount, &updated.Category, &updated.Description, &updated.Date)
 	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("repository: no such expense to update: %w", err)
+		return nil, fmt.Errorf("repository/expense: no such expense to update: %w", err)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("repository: can't update expense: %w", err)
+		return nil, fmt.Errorf("repository/expense: can't update expense: %w", err)
 	}
 
 	return updated, nil
@@ -80,11 +80,11 @@ func (r *ExpenseRepository) DeleteExpense(ctx context.Context, id int, userID in
 	q := `DELETE FROM expanses WHERE id = $1 AND user_id = $2`
 	result, err := r.db.Pool.Exec(ctx, q, id, userID)
 	if err != nil {
-		return fmt.Errorf("repository: can`t delete expanse: %w", err)
+		return fmt.Errorf("repository/expense: can`t delete expanse: %w", err)
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("repository: expanse not found (id: %d, user_id: %d)", id, userID)
+		return fmt.Errorf("repository/expense: expanse not found (id: %d, user_id: %d)", id, userID)
 	}
 	return nil
 }
