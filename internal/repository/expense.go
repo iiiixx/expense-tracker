@@ -135,7 +135,7 @@ func scanExpenses(rows pgx.Rows) ([]model.Expense, error) {
 		expenses = append(expenses, e)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("repository/expense: rows ineratin error: %w", err)
+		return nil, fmt.Errorf("repository/expense: rows ineration error: %w", err)
 	}
 
 	return expenses, nil

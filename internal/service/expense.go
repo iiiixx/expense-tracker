@@ -5,6 +5,8 @@ import (
 	"expense_tracker/internal/model"
 	"expense_tracker/internal/repository"
 	"fmt"
+	"strings"
+	"time"
 )
 
 type ExpenseService struct {
@@ -69,6 +71,28 @@ func (s *ExpenseService) DeleteExpense(ctx context.Context, expenseID, userID in
 	return nil
 }
 
-func (s *ExpenseService) GetExpensesByPeriod() {
+func (s *ExpenseService) GetExpensesByPeriod(ctx context.Context, userID int, start, end time.Time) ([]model.Expense, error) {
+	if start.After(end) {
+		return nil, fmt.Errorf("service/expense: invalid date range")
+	}
+
+	expenses, err := s.expenseRepository.GetExpensesByPeriod(ctx, userID, start, end)
+	if err != nil {
+		return nil, fmt.Errorf("service/expense: can't get expenses by period: %w", err)
+	}
+
+	return expenses, nil
+}
+
+func (s *ExpenseService) GetExpensesByCategory(ctx context.Context, userID int, category string) ([]model.Expense, error) {
+	if strings.TrimSpace(category) == "" {
+		return nil, fmt.Errorf("service/expense: category can't be empty")
+	}
+
+	expenses, err := s.expenseRepository.GetExpensesByCategory(ctx, userID, category)
+	if err != nil {
+		return nil, fmt.Errorf("service/expense: can't get expenses by category: %w", err)
+	}
+	return expenses, nil
 
 }
