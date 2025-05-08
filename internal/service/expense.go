@@ -19,7 +19,7 @@ func NewExpenseServise(expenseRepository *repository.ExpenseRepository) *Expense
 	}
 }
 
-func (s *ExpenseService) CreareExpense(ctx context.Context, userID int, expense model.Expense) (*model.Expense, error) {
+func (s *ExpenseService) CreateExpense(ctx context.Context, userID int, expense model.Expense) (*model.Expense, error) {
 	if expense.Amount <= 0 {
 		return nil, fmt.Errorf("service/expense: amount must be positive")
 	}
