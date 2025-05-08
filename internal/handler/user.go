@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"expense_tracker/internal/model"
 	"expense_tracker/internal/service"
+	"expense_tracker/lib"
 	"net/http"
 )
 
@@ -18,17 +19,21 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID, err := lib.GetUserIDFromContext(r)
+	if err != nil {
+		lib.WriteJSONError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
 
 	var input model.UpdateUsernameInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		lib.WriteJSONError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
 	updatedUser, err := h.userService.UpdateUsername(r.Context(), userID, &input)
 	if err != nil {
-		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusBadRequest)
+		lib.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -37,10 +42,14 @@ func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID, err := lib.GetUserIDFromContext(r)
+	if err != nil {
+		lib.WriteJSONError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
 
 	if err := h.userService.DeleteUser(r.Context(), userID); err != nil {
-		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusBadRequest)
+		lib.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -48,11 +57,15 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID, err := lib.GetUserIDFromContext(r)
+	if err != nil {
+		lib.WriteJSONError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
 
 	user, err := h.userService.GetUserProfile(r.Context(), userID)
 	if err != nil {
-		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
+		lib.WriteJSONError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
