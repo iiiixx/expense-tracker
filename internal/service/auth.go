@@ -46,13 +46,13 @@ func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (s *AuthService) Login(ctx context.Context, username, password string) (string, error) {
-	user, err := s.userRepository.GetUserByName(ctx, username)
+func (s *AuthService) Login(ctx context.Context, input *model.LoginInput) (string, error) {
+	user, err := s.userRepository.GetUserByName(ctx, input.Username)
 	if err != nil {
 		return "", fmt.Errorf("service/auth: wrong username")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		return "", fmt.Errorf("service/auth: wrong password")
 	}
 

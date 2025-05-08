@@ -17,8 +17,8 @@ func NewUserServise(userRepository *repository.UserRepository) *UserService {
 	}
 }
 
-func (s *UserService) UpdateUsername(ctx context.Context, userID int, newUsername string) (*model.User, error) {
-	if newUsername == "" {
+func (s *UserService) UpdateUsername(ctx context.Context, userID int, input *model.UpdateUsernameInput) (*model.User, error) {
+	if input.Username == "" {
 		return nil, fmt.Errorf("service/user: username can't be empty")
 	}
 
@@ -30,7 +30,7 @@ func (s *UserService) UpdateUsername(ctx context.Context, userID int, newUsernam
 		return nil, fmt.Errorf("service/auth: can't found this user: %w", err)
 	}
 
-	updated, err := s.userRepository.UpdateUsername(ctx, userID, newUsername)
+	updated, err := s.userRepository.UpdateUsername(ctx, userID, input)
 	if err != nil {
 		return nil, fmt.Errorf("service/user: can't update username: %w", err)
 	}

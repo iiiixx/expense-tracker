@@ -64,15 +64,15 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 	return nil
 }
 
-func (r *UserRepository) UpdateUsername(ctx context.Context, id int, newUserName string) (*model.User, error) {
-	if newUserName == "" {
+func (r *UserRepository) UpdateUsername(ctx context.Context, id int, input *model.UpdateUsernameInput) (*model.User, error) {
+	if input.Username == "" {
 		return nil, fmt.Errorf("repository/user: username cannot be empty")
 	}
 
 	updated := &model.User{}
 	q := `UPDATE users SET username = COALESCE($1, username) WHERE id = $2 RETURNING id, username`
 
-	err := r.db.Pool.QueryRow(ctx, q, newUserName,
+	err := r.db.Pool.QueryRow(ctx, q, input.Username,
 		id).Scan(&updated.ID, &updated.Username)
 	if err == pgx.ErrNoRows {
 		return nil, fmt.Errorf("repository/user: no such user to update: %w", err)

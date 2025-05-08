@@ -5,3 +5,7 @@ type User struct {
 	Username string `json:"username"`
 	Password string `json:"-"`
 }
+
+type UpdateUsernameInput struct {
+	Username string `json:"username"`
+}
