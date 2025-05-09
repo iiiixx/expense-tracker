@@ -1,3 +1,0 @@
-DB_URL: "postgres://user:password@db:5432/expenses?sslmode=disable"
-JWT_SECRET: "your_secret_key"
-PORT: "8080"
