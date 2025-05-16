@@ -41,7 +41,7 @@ func (r *UserRepository) GetUserByName(ctx context.Context, username string) (*m
 }
 
 func (r *UserRepository) GetUserById(ctx context.Context, id int) (*model.User, error) {
-	q := `SELECT id, username, password FROM users WHERE user_id= $1`
+	q := `SELECT id, username, password FROM users WHERE id = $1`
 	user := model.User{}
 	err := r.db.Pool.QueryRow(ctx, q, id).Scan(&user.ID, &user.Username, &user.Password)
 
@@ -53,7 +53,7 @@ func (r *UserRepository) GetUserById(ctx context.Context, id int) (*model.User, 
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
-	q := `DELETE FROM users WHERE id = &1`
+	q := `DELETE FROM users WHERE id = $1`
 	result, err := r.db.Pool.Exec(ctx, q, id)
 
 	if err != nil {
