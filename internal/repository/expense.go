@@ -24,7 +24,7 @@ func (r *ExpenseRepository) CreateExpense(ctx context.Context, expense model.Exp
 	q := `INSERT INTO expenses (user_id, amount, category, description, date)
 		VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
-	err := r.db.Pool.QueryRow(ctx, q, expense.UserID, expense.Amount, expense.Category, expense.Description, expense.Date).Scan(&id)
+	err := r.db.Pool.QueryRow(ctx, q, expense.UserID, expense.Amount, expense.Category, expense.Description, time.Time(expense.Date)).Scan(&id)
 
 	if err != nil {
 		return 0, fmt.Errorf("repository/expense: can't create expense: %w", err)
@@ -35,8 +35,9 @@ func (r *ExpenseRepository) CreateExpense(ctx context.Context, expense model.Exp
 
 func (r *ExpenseRepository) GetExpenseByID(ctx context.Context, id int, userID int) (*model.Expense, error) {
 	expense := &model.Expense{}
+	var dbDate time.Time
 	q := `SELECT id, user_id, amount, category, description, date FROM expenses WHERE id = $1 and user_id = $2`
-	err := r.db.Pool.QueryRow(ctx, q, id, userID).Scan(&expense.ID, &expense.UserID, &expense.Amount, &expense.Category, &expense.Description, &expense.Date)
+	err := r.db.Pool.QueryRow(ctx, q, id, userID).Scan(&expense.ID, &expense.UserID, &expense.Amount, &expense.Category, &expense.Description, &dbDate)
 
 	if err == pgx.ErrNoRows {
 		return nil, fmt.Errorf("repository/expense: no such expense: %w", err)
@@ -44,6 +45,7 @@ func (r *ExpenseRepository) GetExpenseByID(ctx context.Context, id int, userID i
 	if err != nil {
 		return nil, fmt.Errorf("repository/expense: can't found expense: %w", err)
 	}
+	expense.Date = model.CustomDate(dbDate)
 	return expense, nil
 }
 
@@ -60,20 +62,21 @@ func (r *ExpenseRepository) IsExists(ctx context.Context, id int, userID int) (b
 
 func (r *ExpenseRepository) UpdateExpense(ctx context.Context, id int, userID int, input *model.UpdateExpenseInput) (*model.Expense, error) {
 	updated := &model.Expense{}
+	var dbDate time.Time
 	q := `UPDATE expenses SET amount = COALESCE($1, amount), category = COALESCE($2, category), 
 	description = COALESCE($3, description), date = COALESCE($4, date) WHERE id = $5 and 
 	user_id = $6 RETURNING id, user_id, amount, category, description, date`
 
 	err := r.db.Pool.QueryRow(ctx, q, input.Amount, input.Category,
 		input.Description, input.Date, id, userID).Scan(&updated.ID, &updated.UserID,
-		&updated.Amount, &updated.Category, &updated.Description, &updated.Date)
+		&updated.Amount, &updated.Category, &updated.Description, &dbDate)
 	if err == pgx.ErrNoRows {
 		return nil, fmt.Errorf("repository/expense: no such expense to update: %w", err)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("repository/expense: can't update expense: %w", err)
 	}
-
+	updated.Date = model.CustomDate(dbDate)
 	return updated, nil
 }
 
