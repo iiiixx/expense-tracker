@@ -1,14 +1,14 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(40) NOT NULL,
-    password VARCHAR(20) NOT NULL,
+    username VARCHAR(40) NOT NULL UNIQUE,  
+    password CHAR(60) NOT NULL        
 );
 
 CREATE TABLE expenses (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES user(id),
-    amout DECIMAL(10,2) NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,  
+    amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),        
     category VARCHAR(40) NOT NULL,
     description TEXT,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+    date TIMESTAMP DEFAULT NOW()
+);

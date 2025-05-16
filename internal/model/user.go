@@ -1,9 +1,9 @@
 package model
 
 type User struct {
-	ID       int    `json:"id"`
+	ID       int    `json:"id,omitempty"`
 	Username string `json:"username"`
-	Password string `json:"-"`
+	Password string `json:"password"`
 }
 
 type UpdateUsernameInput struct {

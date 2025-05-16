@@ -4,6 +4,7 @@ import (
 	"context"
 	"expense_tracker/internal/model"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgx"
 )
@@ -29,25 +30,26 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *model.User) error
 }
 
 func (r *UserRepository) GetUserByName(ctx context.Context, username string) (*model.User, error) {
-	q := `SELECT id, username, password FROM users WHERE user_name = $1`
-	user := &model.User{}
+	q := `SELECT id, username, password FROM users WHERE username = $1`
+	user := model.User{}
 	err := r.db.Pool.QueryRow(ctx, q, username).Scan(&user.ID, &user.Username, &user.Password)
 
 	if err != nil {
 		return nil, fmt.Errorf("repository/user: can't get user by name: %w", err)
 	}
-	return user, err
+	return &user, err
 }
 
 func (r *UserRepository) GetUserById(ctx context.Context, id int) (*model.User, error) {
 	q := `SELECT id, username, password FROM users WHERE user_id= $1`
-	user := &model.User{}
+	user := model.User{}
 	err := r.db.Pool.QueryRow(ctx, q, id).Scan(&user.ID, &user.Username, &user.Password)
 
 	if err != nil {
 		return nil, fmt.Errorf("repository/user: can't get user by id: %w", err)
 	}
-	return user, err
+	log.Printf("Данные из БД: ID=%d, Username=%s, Password=%s", user.ID, user.Username, user.Password)
+	return &user, err
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
@@ -69,7 +71,7 @@ func (r *UserRepository) UpdateUsername(ctx context.Context, id int, input *mode
 		return nil, fmt.Errorf("repository/user: username cannot be empty")
 	}
 
-	updated := &model.User{}
+	updated := model.User{}
 	q := `UPDATE users SET username = COALESCE($1, username) WHERE id = $2 RETURNING id, username`
 
 	err := r.db.Pool.QueryRow(ctx, q, input.Username,
@@ -81,7 +83,7 @@ func (r *UserRepository) UpdateUsername(ctx context.Context, id int, input *mode
 		return nil, fmt.Errorf("repository/user: can't update user: %w", err)
 	}
 
-	return updated, nil
+	return &updated, nil
 }
 
 func (r *UserRepository) IsExistsUser(ctx context.Context, id int) (bool, error) {

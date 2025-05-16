@@ -50,6 +50,6 @@ func (s *UserService) GetUserProfile(ctx context.Context, userID int) (*model.Us
 		return nil, fmt.Errorf("service/user: can't get user profile: %w", err)
 	}
 
-	user.Password = ""
+	//user.Password =
 	return user, nil
 }

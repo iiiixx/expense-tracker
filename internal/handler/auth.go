@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"expense_tracker/internal/model"
 	"expense_tracker/internal/service"
+	"log"
 	"net/http"
 )
 
@@ -18,12 +19,13 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, `{"error": "Invalid reguest body}`, http.StatusBadRequest)
+		http.Error(w, `{"error": "invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 
 	if err := h.authService.Register(r.Context(), &user); err != nil {
 		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusBadRequest)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -35,14 +37,16 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var input *model.LoginInput
+	var input model.LoginInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		log.Printf("Ошибка декодирования JSON: %v", err)
+		http.Error(w, `{"error": "invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 
-	token, err := h.authService.Login(r.Context(), input)
+	token, err := h.authService.Login(r.Context(), &input)
 	if err != nil {
+		log.Printf("ERRRROR! token %s: %v: ", token, err)
 		http.Error(w, `{"error": "invalid credentials"}`, http.StatusUnauthorized)
 		return
 	}

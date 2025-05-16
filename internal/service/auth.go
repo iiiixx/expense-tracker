@@ -5,6 +5,7 @@ import (
 	"expense_tracker/internal/model"
 	"expense_tracker/internal/repository"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -33,8 +34,9 @@ func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 	if exists {
 		return fmt.Errorf("service/auth: user is already exists")
 	}
-
+	log.Printf("Пароль перед хешированием: %s", user.Password)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	log.Printf("Хеш при генерации: %s", hashedPassword)
 	if err != nil {
 		return fmt.Errorf("service/auth: can't hash password: %w", err)
 	}
@@ -49,19 +51,26 @@ func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 func (s *AuthService) Login(ctx context.Context, input *model.LoginInput) (string, error) {
 	user, err := s.userRepository.GetUserByName(ctx, input.Username)
 	if err != nil {
-		return "", fmt.Errorf("service/auth: wrong username")
+		return "", fmt.Errorf("service/auth: wrong username: %w", err)
 	}
+
+	log.Printf("Хеш из базы: %s", user.Password)
+	log.Printf("Введенный пароль: %s", input.Password)
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		return "", fmt.Errorf("service/auth: wrong password")
+		return "", fmt.Errorf("service/auth: wrong password: %w", err)
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
 		"exp":     time.Now().Add(s.tokenExpiry).Unix(),
 	})
 
-	return token.SignedString([]byte(s.jwtSecret))
+	signedToken, err := token.SignedString([]byte(s.jwtSecret))
+	if err != nil {
+		return "", fmt.Errorf("service/auth: failed to sign token: %w", err)
+	}
+	return signedToken, nil
 }
 
 func (s *AuthService) ValidateToken(tokenString string) (int, error) {

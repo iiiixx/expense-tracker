@@ -99,7 +99,7 @@ func applyMigrations(cfg *config.Config) error {
 	dsn := cfg.DBURL
 
 	m, err := migrate.New(
-		"file:///Library/go_projects/expense_tracker/migrations",
+		"file:///app/migrations",
 		dsn,
 	)
 	if err != nil {
