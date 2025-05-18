@@ -48,7 +48,7 @@ func (s *ExpenseService) GetExpense(ctx context.Context, userID, expenseID int) 
 	return expense, nil
 }
 
-func (s *ExpenseService) UpdateExpense(ctx context.Context, expenseID, userID int, input model.UpdateExpenseInput) (*model.Expense, error) {
+func (s *ExpenseService) UpdateExpense(ctx context.Context, expenseID, userID int, input *model.UpdateExpenseInput) (*model.Expense, error) {
 	exists, err := s.expenseRepository.IsExists(ctx, expenseID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("service/expense: can't found this expense: %w", err)
@@ -57,7 +57,7 @@ func (s *ExpenseService) UpdateExpense(ctx context.Context, expenseID, userID in
 		return nil, fmt.Errorf("service/expense: expense not found")
 	}
 
-	updated, err := s.UpdateExpense(ctx, expenseID, userID, input)
+	updated, err := s.expenseRepository.UpdateExpense(ctx, expenseID, userID, input)
 	if err != nil {
 		return nil, fmt.Errorf("service/expense: can't update expense: %w", err)
 	}
@@ -71,10 +71,17 @@ func (s *ExpenseService) DeleteExpense(ctx context.Context, expenseID, userID in
 	return nil
 }
 
-func (s *ExpenseService) GetExpensesByPeriod(ctx context.Context, userID int, start, end time.Time) ([]model.Expense, error) {
-	if start.After(end) {
-		return nil, fmt.Errorf("service/expense: invalid date range")
+func (s *ExpenseService) GetExpensesList(ctx context.Context, userID int) ([]model.Expense, error) {
+
+	expenses, err := s.expenseRepository.GetExpensesList(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("service/expense: can't get list of expenses: %w", err)
 	}
+
+	return expenses, nil
+}
+
+func (s *ExpenseService) GetExpensesByPeriod(ctx context.Context, userID int, start, end time.Time) ([]model.Expense, error) {
 
 	expenses, err := s.expenseRepository.GetExpensesByPeriod(ctx, userID, start, end)
 	if err != nil {

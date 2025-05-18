@@ -68,8 +68,9 @@ func main() {
 	router.Handle("GET /expenses/{id}", authMiddleware(http.HandlerFunc(expenseHandler.GetExpense)))
 	router.Handle("PUT /expenses/{id}", authMiddleware(http.HandlerFunc(expenseHandler.UpdateExpense)))
 	router.Handle("DELETE /expenses/{id}", authMiddleware(http.HandlerFunc(expenseHandler.DeleteExpense)))
-	router.Handle("GET /expenses", authMiddleware(http.HandlerFunc(expenseHandler.GetExpenseByPeriod)))
-	router.Handle("GET /expenses/category", authMiddleware(http.HandlerFunc(expenseHandler.GetExpenseByCategory)))
+	router.Handle("GET /expenses", authMiddleware(http.HandlerFunc(expenseHandler.GetExpensesList)))
+	router.Handle("GET /expenses/period", authMiddleware(http.HandlerFunc(expenseHandler.GetExpensesByPeriod)))
+	router.Handle("GET /expenses/category", authMiddleware(http.HandlerFunc(expenseHandler.GetExpensesByCategory)))
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,

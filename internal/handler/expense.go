@@ -86,7 +86,7 @@ func (h *ExpenseHandler) UpdateExpense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updated, err := h.expenseService.UpdateExpense(r.Context(), expenseID, userID, input)
+	updated, err := h.expenseService.UpdateExpense(r.Context(), expenseID, userID, &input)
 	if err != nil {
 		lib.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
@@ -116,21 +116,38 @@ func (h *ExpenseHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *ExpenseHandler) GetExpenseByPeriod(w http.ResponseWriter, r *http.Request) {
+func (h *ExpenseHandler) GetExpensesList(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
 		lib.WriteJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	start, err := time.Parse(time.RFC3339, r.URL.Query().Get("start"))
+	expenses, err := h.expenseService.GetExpensesList(r.Context(), userID)
 	if err != nil {
-		lib.WriteJSONError(w, http.StatusBadRequest, "invalid start time")
+		lib.WriteJSONError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
-	end, err := time.Parse(time.RFC3339, r.URL.Query().Get("end"))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(expenses)
+}
+
+func (h *ExpenseHandler) GetExpensesByPeriod(w http.ResponseWriter, r *http.Request) {
+	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
-		lib.WriteJSONError(w, http.StatusBadRequest, "invalid end time")
+		lib.WriteJSONError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	start, err := time.Parse("2006-01-02", r.URL.Query().Get("start"))
+	if err != nil {
+		lib.WriteJSONError(w, http.StatusBadRequest, "invalid start time (use YYYY-MM-DD)")
+		return
+	}
+	end, err := time.Parse("2006-01-02", r.URL.Query().Get("end"))
+	if err != nil {
+		lib.WriteJSONError(w, http.StatusBadRequest, "invalid end time (use YYYY-MM-DD)")
 		return
 	}
 
@@ -149,7 +166,7 @@ func (h *ExpenseHandler) GetExpenseByPeriod(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(expenses)
 }
 
-func (h *ExpenseHandler) GetExpenseByCategory(w http.ResponseWriter, r *http.Request) {
+func (h *ExpenseHandler) GetExpensesByCategory(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
 		lib.WriteJSONError(w, http.StatusUnauthorized, err.Error())

@@ -6,9 +6,9 @@ CREATE TABLE users (
 
 CREATE TABLE expenses (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,  
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,  
     amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),        
     category VARCHAR(40) NOT NULL,
     description TEXT,
-    date TIMESTAMP DEFAULT NOW()
+    DATE NOT NULL DEFAULT CURRENT_DATE
 );
