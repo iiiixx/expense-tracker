@@ -4,5 +4,27 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_URL=postgres://user:password@host.docker.internal:5432/expenses?sslmode=disable
+      - DB_URL=postgres://user:password@db:5432/expenses?sslmode=disable
       - JWT_SECRET=your_secret_key
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: expenses
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d expenses"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

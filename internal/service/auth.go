@@ -5,19 +5,20 @@ import (
 	"expense_tracker/internal/model"
 	"expense_tracker/internal/repository"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// AuthService provides methods for authentication and authorization operations.
 type AuthService struct {
 	userRepository *repository.UserRepository
 	jwtSecret      string
 	tokenExpiry    time.Duration
 }
 
+// NewAuthService create an instance of AuthService.
 func NewAuthService(userRepository *repository.UserRepository, jwtSecret string, tokenExpiry time.Duration) *AuthService {
 	return &AuthService{
 		userRepository: userRepository,
@@ -26,6 +27,7 @@ func NewAuthService(userRepository *repository.UserRepository, jwtSecret string,
 	}
 }
 
+// Register creates a new user account with hashed password.
 func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 	exists, err := s.userRepository.IsExistsUser(ctx, user.ID)
 	if err != nil {
@@ -34,9 +36,7 @@ func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 	if exists {
 		return fmt.Errorf("service/auth: user is already exists")
 	}
-	log.Printf("Пароль перед хешированием: %s", user.Password)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	log.Printf("Хеш при генерации: %s", hashedPassword)
 	if err != nil {
 		return fmt.Errorf("service/auth: can't hash password: %w", err)
 	}
@@ -48,14 +48,12 @@ func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 	return nil
 }
 
+// Login authenticates a user and generates a JWT token.
 func (s *AuthService) Login(ctx context.Context, input *model.LoginInput) (string, error) {
 	user, err := s.userRepository.GetUserByName(ctx, input.Username)
 	if err != nil {
 		return "", fmt.Errorf("service/auth: wrong username: %w", err)
 	}
-
-	log.Printf("Хеш из базы: %s", user.Password)
-	log.Printf("Введенный пароль: %s", input.Password)
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		return "", fmt.Errorf("service/auth: wrong password: %w", err)
@@ -73,6 +71,7 @@ func (s *AuthService) Login(ctx context.Context, input *model.LoginInput) (strin
 	return signedToken, nil
 }
 
+// ValidateToken verifies a JWT token and extracts user ID.
 func (s *AuthService) ValidateToken(tokenString string) (int, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

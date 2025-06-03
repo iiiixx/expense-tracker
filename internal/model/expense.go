@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Expense represents a financial expense record in the system.
 type Expense struct {
 	ID          int     `json:"id,omitempty"`
 	UserID      int     `json:"user_id,omitempty"`
@@ -16,6 +17,7 @@ type Expense struct {
 	Date        Date    `json:"date"`
 }
 
+// UpdateExpenseInput contains fields for updating an existing expense record. All fields are optional.
 type UpdateExpenseInput struct {
 	Amount      *float64 `json:"amount,omitempty"`
 	Category    *string  `json:"category,omitempty"`
@@ -23,16 +25,17 @@ type UpdateExpenseInput struct {
 	Date        *Date    `json:"date,omitempty"`
 }
 
+// Custom date type that extends time.Time with specific serialization behavior.
 type Date struct {
 	time.Time
 }
 
-// Реализация интерфейса driver.Valuer
+// Implements driver.Valuer for proper SQL storage (formats as YYYY-MM-DD)
 func (d Date) Value() (driver.Value, error) {
 	return d.Time.Format("2006-01-02"), nil // Форматируем дату для БД
 }
 
-// Реализация интерфейса sql.Scanner
+// Implements sql.Scanner for reading from database
 func (d *Date) Scan(value interface{}) error {
 	if value == nil {
 		return nil
@@ -47,6 +50,7 @@ func (d *Date) Scan(value interface{}) error {
 	return nil
 }
 
+// UnmarshalJSON parses dates from JSON strings in YYYY-MM-DD format
 func (d *Date) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), `"`)
 	t, err := time.Parse("2006-01-02", s)
@@ -57,6 +61,7 @@ func (d *Date) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// MarshalJSON formats dates as JSON strings in YYYY-MM-DD format
 func (d Date) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%s"`, d.Time.Format("2006-01-02"))), nil
 }

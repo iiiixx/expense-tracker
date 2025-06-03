@@ -47,8 +47,8 @@ func main() {
 		cfg.JWTSecret,
 		24*time.Hour,
 	)
-	userService := service.NewUserServise(userRep)
-	expeneseService := service.NewExpenseServise(expenseRep)
+	userService := service.NewUserService(userRep)
+	expeneseService := service.NewExpenseService(expenseRep)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)

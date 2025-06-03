@@ -7,16 +7,19 @@ import (
 	"fmt"
 )
 
+// UserService provides methods for user management.
 type UserService struct {
 	userRepository *repository.UserRepository
 }
 
-func NewUserServise(userRepository *repository.UserRepository) *UserService {
+// NewUserService create an instance of UserService.
+func NewUserService(userRepository *repository.UserRepository) *UserService {
 	return &UserService{
 		userRepository: userRepository,
 	}
 }
 
+// UpdateUsername updates a user's name.
 func (s *UserService) UpdateUsername(ctx context.Context, userID int, input *model.UpdateUsernameInput) (*model.User, error) {
 	if input.Username == "" {
 		return nil, fmt.Errorf("service/user: username can't be empty")
@@ -37,6 +40,7 @@ func (s *UserService) UpdateUsername(ctx context.Context, userID int, input *mod
 	return updated, nil
 }
 
+// DeleteUser delete a user by ID.
 func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
 	if err := s.userRepository.DeleteUser(ctx, userID); err != nil {
 		return fmt.Errorf("service/user: can't delete user: %w", err)
@@ -44,6 +48,7 @@ func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
 	return nil
 }
 
+// GetUserProfile retrieves a user's profile by ID.
 func (s *UserService) GetUserProfile(ctx context.Context, userID int) (*model.User, error) {
 	user, err := s.userRepository.GetUserById(ctx, userID)
 	if err != nil {

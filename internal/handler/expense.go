@@ -10,16 +10,23 @@ import (
 	"time"
 )
 
+// ExpenseHandler handles HTTP requests related to expense operations.
 type ExpenseHandler struct {
 	expenseService *service.ExpenseService
 }
 
+// NewExpenseHandler creates a new ExpenseHandler with the given ExpenseService.
 func NewExpenseHandler(expenseService *service.ExpenseService) *ExpenseHandler {
 	return &ExpenseHandler{
 		expenseService: expenseService,
 	}
 }
 
+// CreateExpense handles the HTTP request to create a new expense for the authenticated user.
+// Possible HTTP responses:
+// - 201 Created: Expense created successfully.
+// - 400 Bad Request: Invalid request body or creation error.
+// - 401 Unauthorized: User authentication failed.
 func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
@@ -44,6 +51,12 @@ func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(creared)
 }
 
+// GetExpense handles the HTTP request to retrieve a specific expense by its ID for the authenticated user.
+// Possible HTTP responses:
+// - 200 OK: Expense retrieved successfully.
+// - 400 Bad Request: Invalid expense ID.
+// - 401 Unauthorized: User authentication failed.
+// - 404 Not Found: Expense not found.
 func (h *ExpenseHandler) GetExpense(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
@@ -67,6 +80,11 @@ func (h *ExpenseHandler) GetExpense(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(expense)
 }
 
+// UpdateExpense handles the HTTP request to update an existing expense by its ID for the authenticated user.
+// Possible HTTP responses:
+// - 200 OK: Expense updated successfully.
+// - 400 Bad Request: Invalid expense ID, request body, or update error.
+// - 401 Unauthorized: User authentication failed.
 func (h *ExpenseHandler) UpdateExpense(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
@@ -96,6 +114,11 @@ func (h *ExpenseHandler) UpdateExpense(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updated)
 }
 
+// DeleteExpense handles the HTTP request to delete an expense by its ID for the authenticated user.
+// Possible HTTP responses:
+// - 204 No Content: Expense deleted successfully.
+// - 400 Bad Request: Invalid expense ID or deletion error.
+// - 401 Unauthorized: User authentication failed.
 func (h *ExpenseHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
@@ -116,6 +139,11 @@ func (h *ExpenseHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GetExpensesList handles the HTTP request to retrieve a list of all expenses for the authenticated user.
+// Possible HTTP responses:
+// - 200 OK: Expenses list retrieved successfully.
+// - 401 Unauthorized: User authentication failed.
+// - 500 Internal Server Error: Failed to retrieve expenses.
 func (h *ExpenseHandler) GetExpensesList(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
@@ -133,6 +161,13 @@ func (h *ExpenseHandler) GetExpensesList(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(expenses)
 }
 
+// GetExpensesByPeriod handles the HTTP request to retrieve expenses for the authenticated user within a specified date range.
+// It expects query parameters "start" and "end" with dates in "YYYY-MM-DD" format.
+// Possible HTTP responses:
+// - 200 OK: Expenses retrieved successfully.
+// - 400 Bad Request: Invalid or missing date parameters, or end date before start date.
+// - 401 Unauthorized: User authentication failed.
+// - 500 Internal Server Error: Failed to retrieve expenses.
 func (h *ExpenseHandler) GetExpensesByPeriod(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {
@@ -166,6 +201,13 @@ func (h *ExpenseHandler) GetExpensesByPeriod(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(expenses)
 }
 
+// GetExpensesByCategory handles the HTTP request to retrieve expenses for the authenticated user filtered by category.
+// It expects a query parameter "category".
+// Possible HTTP responses:
+// - 200 OK: Expenses retrieved successfully.
+// - 400 Bad Request: Missing category parameter.
+// - 401 Unauthorized: User authentication failed.
+// - 500 Internal Server Error: Failed to retrieve expenses.
 func (h *ExpenseHandler) GetExpensesByCategory(w http.ResponseWriter, r *http.Request) {
 	userID, err := lib.GetUserIDFromContext(r)
 	if err != nil {

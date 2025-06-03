@@ -4,21 +4,23 @@ import (
 	"context"
 	"expense_tracker/internal/model"
 	"fmt"
-	"log"
 
 	"github.com/jackc/pgx"
 )
 
+// UserRepository provides data access methods for user operations.
 type UserRepository struct {
 	db *Database
 }
 
+// NewUserRepository creates a new instance of UserRepository.
 func NewUserRepository(db *Database) *UserRepository {
 	return &UserRepository{
 		db: db,
 	}
 }
 
+// CreateUser inserts a new user into the database.
 func (r *UserRepository) CreateUser(ctx context.Context, user *model.User) error {
 	q := `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id`
 	err := r.db.Pool.QueryRow(ctx, q, user.Username, user.Password).Scan(&user.ID)
@@ -29,6 +31,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *model.User) error
 	return nil
 }
 
+// GetUserByName retrieves a user by their username.
 func (r *UserRepository) GetUserByName(ctx context.Context, username string) (*model.User, error) {
 	q := `SELECT id, username, password FROM users WHERE username = $1`
 	user := model.User{}
@@ -40,6 +43,7 @@ func (r *UserRepository) GetUserByName(ctx context.Context, username string) (*m
 	return &user, err
 }
 
+// GetUserById retrieves a user by their ID.
 func (r *UserRepository) GetUserById(ctx context.Context, id int) (*model.User, error) {
 	q := `SELECT id, username, password FROM users WHERE id = $1`
 	user := model.User{}
@@ -48,10 +52,10 @@ func (r *UserRepository) GetUserById(ctx context.Context, id int) (*model.User, 
 	if err != nil {
 		return nil, fmt.Errorf("repository/user: can't get user by id: %w", err)
 	}
-	log.Printf("Данные из БД: ID=%d, Username=%s, Password=%s", user.ID, user.Username, user.Password)
 	return &user, err
 }
 
+// DeleteUser removes a user from the database by ID.
 func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 	q := `DELETE FROM users WHERE id = $1`
 	result, err := r.db.Pool.Exec(ctx, q, id)
@@ -66,6 +70,7 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 	return nil
 }
 
+// UpdateUsername changes a user's username.
 func (r *UserRepository) UpdateUsername(ctx context.Context, id int, input *model.UpdateUsernameInput) (*model.User, error) {
 	if input.Username == "" {
 		return nil, fmt.Errorf("repository/user: username cannot be empty")
@@ -86,6 +91,7 @@ func (r *UserRepository) UpdateUsername(ctx context.Context, id int, input *mode
 	return &updated, nil
 }
 
+// IsExistsUser checks if a user with given ID exists.
 func (r *UserRepository) IsExistsUser(ctx context.Context, id int) (bool, error) {
 	var count int
 	q := `SELECT COUNT(*) FROM users WHERE id = $1`

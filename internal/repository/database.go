@@ -10,10 +10,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// The Database struct provides a connection pool to PostgreSQL.
 type Database struct {
 	Pool *pgxpool.Pool
 }
 
+// NewDB initializes a new PostgreSQL connection pool.
 func NewDB(ctx context.Context, cfg *config.Config) (*Database, error) {
 
 	poolConfig, err := pgxpool.ParseConfig(cfg.DBURL)
@@ -37,6 +39,7 @@ func NewDB(ctx context.Context, cfg *config.Config) (*Database, error) {
 	return &Database{Pool: pool}, nil
 }
 
+// Close closes all connections in the pool.
 func (db *Database) Close() {
 	db.Pool.Close()
 }

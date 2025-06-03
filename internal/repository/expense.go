@@ -9,16 +9,19 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// ExpenseRepository provides data access methods for expense operations.
 type ExpenseRepository struct {
 	db *Database
 }
 
+// NewExpenseRepository creates a new instance of ExpenseRepository.
 func NewExpenseRepository(db *Database) *ExpenseRepository {
 	return &ExpenseRepository{
 		db: db,
 	}
 }
 
+// CreateExpense inserts a new expense record into the database.
 func (r *ExpenseRepository) CreateExpense(ctx context.Context, expense model.Expense) (int, error) {
 	var id int
 	q := `INSERT INTO expenses (user_id, amount, category, description, date)
@@ -33,6 +36,7 @@ func (r *ExpenseRepository) CreateExpense(ctx context.Context, expense model.Exp
 	return id, nil
 }
 
+// GetExpenseByID retrieves an expense by its ID and associated user ID.
 func (r *ExpenseRepository) GetExpenseByID(ctx context.Context, id int, userID int) (*model.Expense, error) {
 	expense := &model.Expense{}
 	q := `SELECT id, user_id, amount, category, description, date FROM expenses WHERE id = $1 and user_id = $2`
@@ -47,6 +51,7 @@ func (r *ExpenseRepository) GetExpenseByID(ctx context.Context, id int, userID i
 	return expense, nil
 }
 
+// IsExists checks if an expense with given ID exists for specified user.
 func (r *ExpenseRepository) IsExists(ctx context.Context, id int, userID int) (bool, error) {
 	var count int
 	q := `SELECT COUNT(*) FROM expenses WHERE id = $1 AND user_id = $2`
@@ -58,6 +63,7 @@ func (r *ExpenseRepository) IsExists(ctx context.Context, id int, userID int) (b
 	return count > 0, nil
 }
 
+// UpdateExpense modifies an existing expense record.
 func (r *ExpenseRepository) UpdateExpense(ctx context.Context, id int, userID int, input *model.UpdateExpenseInput) (*model.Expense, error) {
 	updated := &model.Expense{}
 
@@ -78,6 +84,7 @@ func (r *ExpenseRepository) UpdateExpense(ctx context.Context, id int, userID in
 	return updated, nil
 }
 
+// DeleteExpense removes an expense record by ID.
 func (r *ExpenseRepository) DeleteExpense(ctx context.Context, id int, userID int) error {
 	q := `DELETE FROM expenses WHERE id = $1 AND user_id = $2`
 	result, err := r.db.Pool.Exec(ctx, q, id, userID)
@@ -91,6 +98,7 @@ func (r *ExpenseRepository) DeleteExpense(ctx context.Context, id int, userID in
 	return nil
 }
 
+// GetExpensesList retrieves all expenses for a specific user.
 func (r *ExpenseRepository) GetExpensesList(ctx context.Context, userID int) ([]model.Expense, error) {
 	q := `SELECT id, user_id, amount, category, description, date FROM expenses
 	WHERE user_id = $1`
@@ -104,6 +112,7 @@ func (r *ExpenseRepository) GetExpensesList(ctx context.Context, userID int) ([]
 	return scanExpenses(rows)
 }
 
+// GetExpensesByPeriod retrieves expenses for a user within a specific date range.
 func (r *ExpenseRepository) GetExpensesByPeriod(ctx context.Context, userID int, start, end time.Time) ([]model.Expense, error) {
 	q := `SELECT id, user_id, amount, category, description, date FROM expenses
 	WHERE user_id = $1 and date BETWEEN $2 AND $3 ORDER BY date`
@@ -117,6 +126,7 @@ func (r *ExpenseRepository) GetExpensesByPeriod(ctx context.Context, userID int,
 	return scanExpenses(rows)
 }
 
+// GetExpensesByCategory retrieves expenses for a user in a specific category.
 func (r *ExpenseRepository) GetExpensesByCategory(ctx context.Context, userID int, category string) ([]model.Expense, error) {
 	q := `SELECT id, user_id, amount, category, description, date FROM expenses
 	WHERE user_id = $1 and category = $2 ORDER BY date`
@@ -130,6 +140,7 @@ func (r *ExpenseRepository) GetExpensesByCategory(ctx context.Context, userID in
 	return scanExpenses(rows)
 }
 
+// scanExpenses is a helper function to scan multiple expense rows from a query result.
 func scanExpenses(rows pgx.Rows) ([]model.Expense, error) {
 	var expenses []model.Expense
 

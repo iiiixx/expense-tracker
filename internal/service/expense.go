@@ -9,16 +9,19 @@ import (
 	"time"
 )
 
+// ExpenseService provides methods for expense management.
 type ExpenseService struct {
 	expenseRepository *repository.ExpenseRepository
 }
 
-func NewExpenseServise(expenseRepository *repository.ExpenseRepository) *ExpenseService {
+// NewExpenseService create an instanse of ExpenseService.
+func NewExpenseService(expenseRepository *repository.ExpenseRepository) *ExpenseService {
 	return &ExpenseService{
 		expenseRepository: expenseRepository,
 	}
 }
 
+// CreateExpense create an expense.
 func (s *ExpenseService) CreateExpense(ctx context.Context, userID int, expense model.Expense) (*model.Expense, error) {
 	if expense.Amount <= 0 {
 		return nil, fmt.Errorf("service/expense: amount must be positive")
@@ -39,6 +42,7 @@ func (s *ExpenseService) CreateExpense(ctx context.Context, userID int, expense 
 	return &expense, nil
 }
 
+// GetExpenses retrieves an expense by ID.
 func (s *ExpenseService) GetExpense(ctx context.Context, userID, expenseID int) (*model.Expense, error) {
 	expense, err := s.expenseRepository.GetExpenseByID(ctx, expenseID, userID)
 	if err != nil {
@@ -48,6 +52,7 @@ func (s *ExpenseService) GetExpense(ctx context.Context, userID, expenseID int) 
 	return expense, nil
 }
 
+// UpdateExpense updates atributes of expenses by ID.
 func (s *ExpenseService) UpdateExpense(ctx context.Context, expenseID, userID int, input *model.UpdateExpenseInput) (*model.Expense, error) {
 	exists, err := s.expenseRepository.IsExists(ctx, expenseID, userID)
 	if err != nil {
@@ -64,6 +69,7 @@ func (s *ExpenseService) UpdateExpense(ctx context.Context, expenseID, userID in
 	return updated, nil
 }
 
+// DeleteExpense delete expense by ID.
 func (s *ExpenseService) DeleteExpense(ctx context.Context, expenseID, userID int) error {
 	if err := s.expenseRepository.DeleteExpense(ctx, expenseID, userID); err != nil {
 		return fmt.Errorf("service/expense: can't delete expense: %w", err)
@@ -71,6 +77,7 @@ func (s *ExpenseService) DeleteExpense(ctx context.Context, expenseID, userID in
 	return nil
 }
 
+// GetExpensesList retrieves all user's expenses by user ID.
 func (s *ExpenseService) GetExpensesList(ctx context.Context, userID int) ([]model.Expense, error) {
 
 	expenses, err := s.expenseRepository.GetExpensesList(ctx, userID)
@@ -81,6 +88,7 @@ func (s *ExpenseService) GetExpensesList(ctx context.Context, userID int) ([]mod
 	return expenses, nil
 }
 
+// GetExpensesByPeriod retrieves expenses for a user within a specific date range.
 func (s *ExpenseService) GetExpensesByPeriod(ctx context.Context, userID int, start, end time.Time) ([]model.Expense, error) {
 
 	expenses, err := s.expenseRepository.GetExpensesByPeriod(ctx, userID, start, end)
@@ -91,6 +99,7 @@ func (s *ExpenseService) GetExpensesByPeriod(ctx context.Context, userID int, st
 	return expenses, nil
 }
 
+// GetExpensesByCategory retrieves expenses in a specific category.
 func (s *ExpenseService) GetExpensesByCategory(ctx context.Context, userID int, category string) ([]model.Expense, error) {
 	if strings.TrimSpace(category) == "" {
 		return nil, fmt.Errorf("service/expense: category can't be empty")
