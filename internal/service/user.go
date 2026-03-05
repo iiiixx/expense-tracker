@@ -5,17 +5,21 @@ import (
 	"expense_tracker/internal/model"
 	"expense_tracker/internal/repository"
 	"fmt"
+
+	"github.com/sirupsen/logrus"
 )
 
 // UserService provides methods for user management.
 type UserService struct {
 	userRepository *repository.UserRepository
+	logger         *logrus.Logger
 }
 
 // NewUserService create an instance of UserService.
-func NewUserService(userRepository *repository.UserRepository) *UserService {
+func NewUserService(userRepository *repository.UserRepository, logger *logrus.Logger) *UserService {
 	return &UserService{
 		userRepository: userRepository,
+		logger:         logger,
 	}
 }
 

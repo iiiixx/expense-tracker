@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -16,14 +17,16 @@ type AuthService struct {
 	userRepository *repository.UserRepository
 	jwtSecret      string
 	tokenExpiry    time.Duration
+	logger         *logrus.Logger
 }
 
 // NewAuthService create an instance of AuthService.
-func NewAuthService(userRepository *repository.UserRepository, jwtSecret string, tokenExpiry time.Duration) *AuthService {
+func NewAuthService(userRepository *repository.UserRepository, jwtSecret string, tokenExpiry time.Duration, logger *logrus.Logger) *AuthService {
 	return &AuthService{
 		userRepository: userRepository,
 		jwtSecret:      jwtSecret,
 		tokenExpiry:    tokenExpiry,
+		logger:         logger,
 	}
 }
 

@@ -6,6 +6,8 @@ import (
 	"expense_tracker/lib"
 	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 // AuthMiddleware returns an HTTP middleware that authenticates requests using a Bearer token.
@@ -26,27 +28,42 @@ import (
 // Usage:
 //
 //	http.Handle("/protected", AuthMiddleware(authService)(protectedHandler))
-func AuthMiddleware(authService *service.AuthService) func(http.Handler) http.Handler {
+func AuthMiddleware(authService *service.AuthService, logger *logrus.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log := logger.WithFields(logrus.Fields{
+				"middleware": "AuthMiddleware",
+				"path":       r.URL.Path,
+				"method":     r.Method,
+			})
+			log.Debug("starting authentication")
+
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
+				log.Warn("authorization header missing")
 				lib.WriteJSONError(w, http.StatusUnauthorized, "authotization header is required")
 				return
 			}
 
 			if !strings.HasPrefix(authHeader, "Bearer ") {
+				log.Warn("invalid authorization header format")
 				lib.WriteJSONError(w, http.StatusUnauthorized, "invalid authorization format")
 				return
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
+			log = log.WithField("token_length", len(tokenString))
 			userID, err := authService.ValidateToken(tokenString)
+
 			if err != nil {
+				log.WithError(err).Warn("token validation failed")
 				lib.WriteJSONError(w, http.StatusUnauthorized, "invalid token")
 				return
 			}
+
+			log = log.WithField("user_id", userID)
+			log.Info("user authenticated successfully")
 
 			ctx := context.WithValue(r.Context(), lib.UserIDkey, userID)
 

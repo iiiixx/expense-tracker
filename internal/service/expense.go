@@ -7,17 +7,21 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 // ExpenseService provides methods for expense management.
 type ExpenseService struct {
 	expenseRepository *repository.ExpenseRepository
+	logger            *logrus.Logger
 }
 
 // NewExpenseService create an instanse of ExpenseService.
-func NewExpenseService(expenseRepository *repository.ExpenseRepository) *ExpenseService {
+func NewExpenseService(expenseRepository *repository.ExpenseRepository, logger *logrus.Logger) *ExpenseService {
 	return &ExpenseService{
 		expenseRepository: expenseRepository,
+		logger:            logger,
 	}
 }
 
