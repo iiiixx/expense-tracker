@@ -8,7 +8,6 @@ import (
 	"expense_tracker/internal/repository"
 	"expense_tracker/internal/service"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"syscall"
@@ -23,39 +22,40 @@ import (
 )
 
 func main() {
-
 	cfg := config.Load()
+	logger := cfg.Logger
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	db, err := repository.NewDB(ctx, cfg)
 	if err != nil {
-		log.Fatalf("cmd: failed to connect to database: %v", err)
+		logger.Fatalf("failed to connect to database: %v", err)
 	}
 	defer db.Pool.Close()
 
 	if err := applyMigrations(cfg); err != nil {
-		log.Fatalf("cmd: migrations failed: %v", err)
+		logger.Fatalf("migrations failed: %v", err)
 	}
 
-	userRep := repository.NewUserRepository(db)
-	expenseRep := repository.NewExpenseRepository(db)
+	userRep := repository.NewUserRepository(db, logger)
+	expenseRep := repository.NewExpenseRepository(db, logger)
 
 	authService := service.NewAuthService(
 		userRep,
 		cfg.JWTSecret,
 		24*time.Hour,
+		logger,
 	)
-	userService := service.NewUserService(userRep)
-	expeneseService := service.NewExpenseService(expenseRep)
+	userService := service.NewUserService(userRep, logger)
+	expeneseService := service.NewExpenseService(expenseRep, logger)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
 	expenseHandler := handler.NewExpenseHandler(expeneseService)
 
 	router := http.NewServeMux()
-	authMiddleware := middleware.AuthMiddleware(authService)
+	authMiddleware := middleware.AuthMiddleware(authService, logger)
 
 	router.HandleFunc("POST /auth/register", authHandler.Register)
 	router.HandleFunc("POST /auth/login", authHandler.Login)
@@ -85,14 +85,15 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		logger.Info("server shutting down")
 		if err := server.Shutdown(ctx); err != nil {
-			log.Printf("cmd: server shutdown error: %v", err)
+			logger.Errorf("server shutdown error: %v", err)
 		}
 	}()
 
-	log.Printf("cmd: server starting on port %s", cfg.Port)
+	logger.Infof("server starting on port %s", cfg.Port)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("cmd: server failed: %v", err)
+		logger.Fatalf("server failed: %v", err)
 	}
 }
 
